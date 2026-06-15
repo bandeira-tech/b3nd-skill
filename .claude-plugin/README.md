@@ -8,6 +8,6 @@ sources (JSR, GitHub) before generating code.
 Install via the marketplace:
 
 ```
-/plugin marketplace add bandeira-tech/b3nd-plugin
+/plugin marketplace add bandeira-tech/b3nd-skill
 /plugin install b3nd
 ```

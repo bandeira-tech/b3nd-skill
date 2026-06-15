@@ -3,87 +3,108 @@
 A protocol on B3nd is three things together:
 
 1. A **URI scheme** — the address space your protocol owns.
-2. A **schema** — a map from URI prefixes to programs.
-3. A **trust model** — who can write where, and how that's enforced.
+2. A set of **programs** — URI-prefix → classifier function returning
+   a protocol-defined code.
+3. A set of **code handlers** — code → pure transform that returns the
+   `Output[]` the rig should dispatch.
 
-You design these three; the framework handles dispatch, storage,
-encryption, and transport.
+You design these three; the framework dispatches and persists.
 
 ## Start from the messages
 
-Before writing any code, write down the messages your protocol needs.
-Each message is a tuple. For each one, ask:
+Before writing code, write down the messages your protocol needs. Each
+message is `[uri, payload]`. For each one, ask:
 
 - What is the URI? What does the prefix say about who owns it?
-- What goes in values vs data? Values are for conserved quantities the
-  protocol must reason about; data is the payload.
+- What does the payload carry? Is it cleartext, encrypted, hashed,
+  signed?
 - What rule decides whether this message is valid?
-- Who is allowed to write it?
+- Which classification code(s) can the program return for this URI?
+- What should happen for each code — persist, decompose, refuse, emit
+  follow-up tuples?
 
-If you can describe every message this way, you can build the protocol.
+If you can describe every message that way, you can write the protocol
+as a `{ programs, handlers }` pair.
 
 ## URI conventions
 
-URIs express *behavior*, not meaning. The prefix tells the framework which
-program to dispatch to; the suffix is whatever the protocol wants it to
-mean. Common patterns:
+URIs express *behavior*, not meaning. The prefix selects the program;
+the suffix is whatever the protocol wants. Common patterns:
 
-- **Owned by a pubkey** — the URI embeds the writer's public key. The
-  program checks that the signature matches.
-- **Content-addressed** — the URI is the hash of the data. The program
-  checks the hash.
-- **Immutable** — the program rejects any write to a URI that already has
-  a value.
-- **Encrypted** — the URI signals that data is ciphertext; the protocol
-  doesn't try to interpret payload.
+- **Owned by a pubkey** — the URI embeds the writer's key. The program
+  verifies the signature.
+- **Content-addressed** — the URI is the hash of the payload. The
+  program checks the hash.
+- **Immutable** — the program returns a refusal code if a value already
+  exists at the URI; the matching handler returns `[]`.
+- **Encrypted** — the URI advertises that payload is ciphertext; the
+  program never tries to interpret it.
 
-Pick the conventions that match your trust model. Document them in the
-protocol's README.
+Pick conventions that match your trust model. Document them in the
+protocol's README. Operators will use them to wire routes.
 
 ## Programs as classifiers
 
-A program is a pure function. Inputs: the message and whatever context the
-framework provides. Output: a result that says accept or reject (and may
-carry protocol-defined codes).
+A program is a pure async function. Inputs: the `Output` being
+classified, its upstream parent (or `undefined` at the top level), and
+a `read` function for confirmed-state lookups. Output: a
+`ProgramResult` carrying a code.
 
 Programs do **not**:
 
-- Store data.
-- Mutate global state.
-- Make network calls.
-- Decide where the data lives.
+- Store data, mutate global state, or make network calls.
+- Decide what to dispatch — that's the handler's job.
+- Sub-classify by calling back into the rig. If a program needs to
+  break a payload into sub-outputs, it does so internally and returns
+  a code that the matching handler decomposes.
 
-They classify. That's it.
+## Code handlers as transforms
+
+A code handler is a pure async function. Inputs: the classified
+`Output`, the `ProgramResult`, and a `read` function. Output: the
+`Output[]` to dispatch through `routes.receive`. Common shapes:
+
+- **persist** — return `[out]`. The simple "this is valid, store it"
+  case.
+- **decompose** — return `[envelope, ...payload.outputs, ...deletions]`.
+  An envelope-style write that produces multiple tuples.
+- **conditional** — read existing state via `read`, return `[]` to
+  refuse or `[out]` to accept.
+- **refuse** — return `[]`. Classification said no.
+
+Handlers run after the program classifies. Handler emissions skip
+re-classification (handlers are canonical interpreters). Reactions run
+after broadcast lands.
 
 ## Choosing a trust model
 
 B3nd does not pick a trust model for you. Common ones:
 
-- **Open** — anyone can write anywhere. The program validates form, not
-  authorization.
-- **Pubkey-gated** — writes are valid only if signed by a key the URI
-  identifies. The program verifies the signature.
-- **Managed** — a single operator (or quorum) approves writes. Useful for
-  curated networks.
-- **Content-conserved** — writes consume inputs and produce outputs; the
-  program enforces conservation.
+- **Open** — anyone can write anywhere; programs validate form only.
+- **Pubkey-gated** — writes are accepted only if signed by the key the
+  URI identifies.
+- **Managed** — a single operator (or quorum) signs off on writes.
+- **Conservation-based** — handlers enforce that inputs consumed equal
+  outputs produced.
 
-The model lives in the program. Different programs in the same schema can
-use different models.
+The model lives across programs (classify) and handlers (emit). You can
+mix models in one schema — different URI prefixes can use different
+trust postures.
 
 ## Packaging a protocol
 
-A protocol is shipped as a module that exports a schema (and any helpers
-for app developers — typed wrappers, URI builders, etc.). Operators load
-the schema into a node; app developers depend on the same module to get
-typed access.
+A protocol is shipped as a module that exports `{ programs, handlers }`
+(and any helpers for app developers — URI builders, typed payload
+helpers, etc.). Apps and operators both depend on the same module: they
+construct a `Rig` with those tables and wire routes appropriate to the
+deployment.
 
-For the current packaging layout and the recommended module shape, follow
-TARGETS.md to find the framework's current protocol-author docs on JSR.
+Protocol authors do **not** ship transport or storage choices. Those
+are operator concerns.
 
 ## What to verify in code before writing it
 
 When the user asks you to design a protocol, do not generate import
-statements or function calls until you have done the relay in TARGETS.md.
-The shape of programs and schemas is stable; the exact names and exports
-are not.
+statements or function calls until you have done the relay in
+TARGETS.md. The shape of programs and handlers is stable; exact type
+names and helper imports are not.

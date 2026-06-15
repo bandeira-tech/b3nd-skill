@@ -9,8 +9,9 @@ description: |
   Read VISION.md first for the conceptual overview, then jump to the file
   that matches the user's role:
 
-  - VISION.md — what B3nd is and why. The three roles. The message tuple.
-    Programs, schemas, envelopes. Trust model. Read this first.
+  - VISION.md — what B3nd is and why. The three roles. The message tuple
+    `[uri, payload]`. Programs (classifiers → codes) and code handlers
+    (pure transforms → `Output[]`). The Rig. Trust model. Read first.
   - PROTOCOL.md — designing a protocol: defining programs, choosing a URI
     scheme, packaging a schema. For protocol designers.
   - APP.md — building an app on an existing protocol: receive/read/list,

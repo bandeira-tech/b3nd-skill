@@ -1,6 +1,6 @@
-# b3nd-plugin
+# b3nd-skill
 
-A Claude Code plugin that teaches the **shape** of [B3nd](https://github.com/bandeira-tech/b3nd)
+A Claude Code plugin that teaches the **shape** of [B3nd](https://github.com/bandeira-tech/b3nd-core)
 and instructs the agent to verify everything else against live sources.
 
 B3nd's APIs evolve faster than any embedded skill content can keep up
@@ -18,7 +18,7 @@ examples. Those live in the source.
 ## Install
 
 ```
-/plugin marketplace add bandeira-tech/b3nd-plugin
+/plugin marketplace add bandeira-tech/b3nd-skill
 /plugin install b3nd
 ```
 
