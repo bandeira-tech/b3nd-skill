@@ -43,6 +43,16 @@ the suffix is whatever the protocol wants. Common patterns:
 Pick conventions that match your trust model. Document them in the
 protocol's README. Operators will use them to wire routes.
 
+**Don't put an opaque id directly after the scheme.** A URI like
+`thing://abc123` puts `abc123` in the URI's *host* slot — the part
+program prefixes match on. A program keyed at `thing://abc123` wouldn't
+generalize; a program keyed at `thing://` has no further structure to
+classify against. Insert at least one stable path segment so the
+routable prefix is meaningful: `thing://t/abc123`, `thing://by-id/abc123`,
+etc. This also keeps related locators (indexes, sub-resources) inside
+the same routable prefix as the items themselves — e.g. `thing://t/list`
+routes alongside `thing://t/<id>`.
+
 ## Programs as classifiers
 
 A program is a pure async function. Inputs: the `Output` being
