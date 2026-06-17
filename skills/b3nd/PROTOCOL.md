@@ -53,6 +53,93 @@ etc. This also keeps related locators (indexes, sub-resources) inside
 the same routable prefix as the items themselves — e.g. `thing://t/list`
 routes alongside `thing://t/<id>`.
 
+## Schemes name behavior; paths name the application
+
+"URIs express behavior, not meaning" has a sharper edge worth naming.
+
+When you pick a scheme, prefer one that names **what the program
+enforces** over one that names **what the data is about**. Schemes like
+`hash://sha256/`, `immutable://`, `signed://<pubkey>/`,
+`mutable://<pubkey>/`, `encrypted://` describe a *rule*. Schemes like
+`task://`, `info://`, `recipe://` describe a *domain*.
+
+Both work. The behavior-named approach has two payoffs:
+
+- **Composition.** Multiple apps can share a foundational scheme. A
+  "decisions log" and a "task index" both want immutability — they can
+  both write under `immutable://` (in different path namespaces) and
+  inherit the same program.
+- **Operator clarity.** Operators wire backends to *behaviors* —
+  "immutable goes to object-locked S3; mutable goes to Postgres" —
+  rather than per-app schemes that re-decide the same questions.
+
+Domain-named schemes are not wrong. They're one app's worth of
+foundational surface written from scratch. If your protocol is
+genuinely sui generis, invent a new scheme. Otherwise, prefer to
+compose.
+
+See also: base-path injection below for letting a single protocol
+module mount under different schemes at deploy time.
+
+## Base-path injection — letting deployers choose the mount point
+
+A protocol module does not have to hard-code its scheme. It can export
+a **factory** that takes a base path at construction time:
+
+```
+taskwatchProtocol("task://t/")                     // standalone
+taskwatchProtocol("signed://0xabc.../taskwatch/")  // mounted inside a signed scheme
+taskwatchProtocol("immutable://acme/tasks/")       // mounted inside an org-namespaced immutable surface
+```
+
+The factory builds programs keyed at `${basePath}<sub-prefix>` and URI
+helpers prepend `basePath`. The shape, validators, classifiers, and
+handlers are identical across mounts. The behavior **on top of** the
+mount is whatever the outer scheme guarantees — which is how the
+protocol inherits signing, immutability, or encryption from its host
+scheme without having to re-implement those rules.
+
+When designing this way:
+
+- **URI helpers are the only public way to build URIs.** No caller
+  should hard-code `task://t/<id>` — if they do, the mount-point
+  abstraction leaks.
+- **Validate the base path in the factory.** It must end with `/`,
+  carry a scheme and host, and reject bases incompatible with the
+  protocol's writes (e.g. mounting a mutable index under
+  `hash://sha256/`).
+- **Multi-tenancy falls out.** The base path is a tenant key — two
+  instances of the same protocol on one rig under different bases
+  share no state.
+- **Discoverability is the cost.** `signed://0xabc.../taskwatch/` is
+  less self-describing than `task://t/` in a route table. Consider
+  exposing a manifest (`{ name, basePath, programKeys }`) so operators
+  can introspect what's mounted where.
+
+This is independent of the behavior-named-scheme guidance above.
+Either composes without the other; together they give you protocol
+modules that are reusable across trust models and namespaces.
+
+## Use protocols here to push-test canon
+
+The patterns above (behavior-named schemes, base-path injection,
+operator-wired backend behaviors) are the shape `b3nd-canon` is
+heading toward — canonical `immutable://`, `signed://`, `mutable://`,
+`encrypted://` protocols that everyone composes against instead of
+re-inventing.
+
+Canon is not there yet (see TARGETS.md). Until it is, every protocol
+you write following these patterns is a **probe** for what canon
+should ship. When you implement immutability in a handler, treat that
+handler as canon's draft for `immutable://`. When you implement
+signature-gating, that's canon's draft for `signed://`. Keep the
+implementation small enough that it could be lifted into canon
+without a rewrite.
+
+Surface what surprised you — the validation rule that wasn't obvious,
+the edge case the URI grammar didn't cover, the operator-wiring story
+that needed bespoke glue. Those surprises are the spec canon needs.
+
 ## Programs as classifiers
 
 A program is a pure async function. Inputs: the `Output` being

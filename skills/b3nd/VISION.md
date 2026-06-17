@@ -84,6 +84,11 @@ request-time directives, a pattern with wildcards, or anything else the
 client's grammar accepts. The framework does not constrain locator
 syntax; pattern-matching on routes uses a separate segment-glob grammar.
 
+The scheme is the protocol's most expensive choice — it shapes how
+programs classify and how operators wire routes. Prefer schemes that
+name a *behavior* the program enforces over schemes that name a
+*domain*. See PROTOCOL.md.
+
 ## Cryptography is client-side
 
 Identity uses Ed25519. Confidentiality uses X25519. Content addressing
