@@ -1,3 +1,9 @@
+---
+level: L5
+audience: infrastructure operators running B3nd nodes (or planning to)
+assumes: production ops vocabulary (durability classes, replication topology, RPO/RTO, key management); familiar with at least one platform (AWS/Cloudflare/homelab/Kubernetes)
+---
+
 # Running a node
 
 A node is a Rig configured with:

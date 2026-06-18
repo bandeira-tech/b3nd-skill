@@ -1,3 +1,9 @@
+---
+level: L4
+audience: protocol designers — anyone defining the rules of a B3nd network
+assumes: VISION.md absorbed; comfort with pure functions, dispatch tables, URI-prefix routing, classifier/handler separation
+---
+
 # Designing a protocol
 
 A protocol on B3nd is three things together:

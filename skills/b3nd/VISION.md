@@ -1,3 +1,9 @@
+---
+level: L3
+audience: readers who want the technical shape end-to-end
+assumes: familiarity with HTTP, URIs, async functions, key/value addressing; comfortable with formal language
+---
+
 # Vision
 
 B3nd is a framework for building DePIN protocols. It gives you URI-addressed

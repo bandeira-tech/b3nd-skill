@@ -1,3 +1,9 @@
+---
+level: L3
+audience: builders who have shipped services and felt the production drag
+assumes: working knowledge of service-oriented architecture, deployment, the operational tax of running multiple services in production
+---
+
 # Why B3nd exists
 
 Software development has entered an era where computing is commodity
