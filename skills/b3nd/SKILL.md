@@ -16,6 +16,12 @@ description: |
     scheme, packaging a schema. For protocol designers.
   - APP.md — building an app on an existing protocol: receive/read/list,
     identity, encryption, transports. For app developers.
+  - MCP.md — specifics for building Claude Code MCP servers that expose
+    a B3nd rig. Plugin packaging, env-driven config, status() as the
+    discovery surface.
+  - FRONTEND.md — specifics for building browser apps over B3nd. One
+    protocol module on both sides, observe-driven reactivity, hash://
+    byte handling, browser-as-rig vs browser-as-client.
   - OPERATOR.md — running B3nd nodes: backends, replication, keys,
     deployment. For infrastructure operators.
   - TARGETS.md — current packages, versions, and the relay protocol the
@@ -48,6 +54,8 @@ exist to help you reason about *what* to build, not *how* to call it.
 - "What is B3nd / why does it exist / how do I think about it?" → VISION.md
 - "I want to design a protocol on B3nd." → VISION.md, then PROTOCOL.md
 - "I want to build an app on an existing protocol." → VISION.md, then APP.md
+- "I'm building a Claude Code MCP plugin over B3nd." → APP.md, then MCP.md
+- "I'm building a browser app over B3nd." → APP.md, then FRONTEND.md
 - "I need to run / operate B3nd nodes." → OPERATOR.md
 - "What package / version / export path / function signature?" → TARGETS.md
 

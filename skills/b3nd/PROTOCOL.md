@@ -81,6 +81,69 @@ compose.
 See also: base-path injection below for letting a single protocol
 module mount under different schemes at deploy time.
 
+## Decompose records into URI subtrees
+
+A record doesn't have to be a single JSON payload at a single URI.
+Often the cheapest protocol shape is a **tree of URIs** under a
+per-record root, where each fact is its own URI and current state is
+derived by listing and folding — not by parsing a document.
+
+A typical layout under the record root uses a few named subspaces:
+
+```
+<root>/data/<field>          # current value of each data field
+<root>/meta/<field>          # bookkeeping (createdAt, owner, version, ...)
+<root>/entries/{ts}-{kind}   # append-only history; kind in the URI, body in the payload
+```
+
+Protocols add more subspaces as they need them (`tags/`, `resources/`,
+`context/`, ...). The convention to hold to:
+
+- **`data/`** — the canonical "what this record holds right now."
+  Last-write-wins per field. The agent updates `data/title` by writing
+  that URI; no record-rewrite needed. Don't put data fields like
+  `title` or `description` directly at the record root — keep them
+  inside `data/` so the root is a namespace, not a record body.
+- **`meta/`** — protocol-defined bookkeeping. Same shape as `data/`,
+  separated by concern.
+- **`entries/`** — append-only history. The entry kind is in the URI
+  (`{ts}-status-paused`, `{ts}-progress`, `{ts}-note`); the payload is
+  the human-readable body. Status, last-updated-at, count are all
+  derivable from the URI list alone — payloads are optional for
+  derivation.
+
+What this kills:
+
+- Read-modify-write boilerplate. Appending an event is one write.
+- Full-record rewrites on every change. Editing one field is one
+  write to that field's URI.
+- Schema mismatch on partial updates. The shape is the URI tree, not
+  a record schema.
+- Hot-row contention. Concurrent writers updating different fields
+  touch different URIs.
+
+What it gives up:
+
+- **Single-document atomicity.** A multi-URI write is multiple
+  operations. Order writes so a partial failure is recoverable (e.g.
+  write `data/title` last so a half-failed create looks "untitled"
+  and is fixable).
+- **Record-shape validation.** Programs validate URI shapes
+  (`entries/` leaves must be `{ts}-{kind}`, tags must match a
+  charset, etc.), but they can't reject "you forgot to write a title"
+  because there is no record to reject. Missing fields render as
+  empty values by convention.
+
+**Enumeration.** Foundational stores (FS, plain S3) may not list
+across path depths. Maintain an explicit `<basepath>index/<sortable-key>`
+URI as a cheap secondary index, treated as cache-like derived state
+rebuildable from the source.
+
+**Derived views.** Expose a synthetic locator (e.g. `<root>?fn=view`)
+that the protocol's node resolves by issuing the component reads in
+parallel and returning the folded state in one call. The underlying
+URIs remain canonical; `?fn=view` is convenience.
+
 ## Base-path injection — letting deployers choose the mount point
 
 A protocol module does not have to hard-code its scheme. It can export
