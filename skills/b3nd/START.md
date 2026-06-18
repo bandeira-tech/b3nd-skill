@@ -1,9 +1,3 @@
----
-level: L1
-audience: builders new to B3nd, often agent-mediated
-assumes: nothing — no programming background, no URI/HTTP/database vocabulary
----
-
 # Start here
 
 Your agent makes things. Notes, captures, plans, results, drafts, payloads

@@ -1,9 +1,3 @@
----
-level: L2
-audience: browser-app developers building on a B3nd protocol
-assumes: familiarity with a modern frontend framework (React/Vue/Svelte/Signals) and bundlers; APP.md absorbed
----
-
 # Building browser apps over B3nd
 
 A B3nd protocol can run in the browser by importing the same

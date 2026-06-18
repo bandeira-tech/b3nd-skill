@@ -1,9 +1,3 @@
----
-level: L2
-audience: app developers consuming an existing B3nd protocol
-assumes: working CRUD-stack mental model (e.g. Express/Rails/Next/Django + Postgres/Mongo/SQLite); comfortable writing code and reading function signatures
----
-
 # Building an app on a protocol
 
 App developers consume a protocol. The protocol gives you programs and

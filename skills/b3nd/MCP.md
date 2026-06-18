@@ -1,9 +1,3 @@
----
-level: L2
-audience: developers building Claude Code MCP plugins over B3nd
-assumes: familiarity with Claude Code plugins (commands/skills/.mcp.json), stdio JSON-RPC; APP.md absorbed
----
-
 # Building MCP servers over B3nd
 
 A B3nd rig becomes a Claude Code MCP server by exposing it over stdio
