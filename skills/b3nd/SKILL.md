@@ -6,12 +6,16 @@ description: |
   export path, or version, you MUST verify against live sources (TARGETS.md
   for the current package list, then JSR/GitHub for current symbols).
 
-  Read VISION.md first for the conceptual overview, then jump to the file
-  that matches the user's role:
+  Read WHY.md first for the motivation, then VISION.md for the shape,
+  then jump to the file that matches the user's role:
 
-  - VISION.md — what B3nd is and why. The three roles. The message tuple
+  - WHY.md — why B3nd exists. Commoditized computing, data as the
+    asset, the production drag of SOA, Data Oriented Architecture,
+    the move/save/send/show framing, and why DePIN primitives turned
+    out to be the right answer. Read first.
+  - VISION.md — what B3nd is. The three roles. The message tuple
     `[uri, payload]`. Programs (classifiers → codes) and code handlers
-    (pure transforms → `Output[]`). The Rig. Trust model. Read first.
+    (pure transforms → `Output[]`). The Rig. Trust model. Read second.
   - PROTOCOL.md — designing a protocol: defining programs, choosing a URI
     scheme, packaging a schema. For protocol designers.
   - APP.md — building an app on an existing protocol: receive/read/list,
@@ -51,8 +55,9 @@ exist to help you reason about *what* to build, not *how* to call it.
 
 ## When to read which file
 
-- "What is B3nd / why does it exist / how do I think about it?" → VISION.md
-- "I want to design a protocol on B3nd." → VISION.md, then PROTOCOL.md
+- "Why does B3nd exist / what problem is it solving?" → WHY.md
+- "What is B3nd / how do I think about it?" → WHY.md, then VISION.md
+- "I want to design a protocol on B3nd." → WHY.md, VISION.md, then PROTOCOL.md
 - "I want to build an app on an existing protocol." → VISION.md, then APP.md
 - "I'm building a Claude Code MCP plugin over B3nd." → APP.md, then MCP.md
 - "I'm building a browser app over B3nd." → APP.md, then FRONTEND.md
