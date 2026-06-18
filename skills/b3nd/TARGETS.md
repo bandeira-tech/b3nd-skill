@@ -34,10 +34,16 @@ these as current.
 
 ## Packages to avoid leaning on
 
-- **`@bandeira-tech/b3nd-canon`** — very early. Exists, but is not the
-  stable surface to build against yet. If the user asks about canon,
-  flag that it's early and confirm with them before assuming any
-  particular shape.
+- **`@bandeira-tech/b3nd-canon`** — very early. Exists but not the
+  stable surface to build against yet. Canon is heading toward the
+  patterns this skill is teaching: mounting basepaths, URI-subtree
+  records, `status()` as a manifest, behavior-named foundational
+  schemes (`immutable://`, `signed://`, `mutable://`, `encrypted://`).
+  When you implement one of those patterns in a protocol you write
+  here, treat the implementation as canon's draft — keep it small
+  enough to lift in without a rewrite once canon stabilizes. If the
+  user asks about canon now, flag that it's early and confirm
+  before assuming any particular shape.
 - **`@bandeira-tech/b3nd-sdk`** — currently dormant. The umbrella SDK
   package is not the recommended entry point right now. Use core,
   move, and save directly.

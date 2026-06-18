@@ -59,6 +59,11 @@ The rig owns the wire. Handlers describe what should happen; the rig
 dispatches it. Both layers are pure. A protocol is just programs +
 handlers + URI conventions.
 
+A record doesn't have to be a single payload at a single URI. Many
+protocols are cleaner as a tree of URIs per record, with state
+derived by listing and folding rather than by parsing a document.
+See PROTOCOL.md.
+
 ## The Rig
 
 The rig is the harness that wires it all together. A protocol designer
@@ -105,6 +110,34 @@ The framework validates and dispatches. Whether an accepted output is
 persisted, cached, replicated, or forwarded is decided by the operator
 when wiring routes to backends. App and protocol code never couple to a
 backend choice.
+
+## Users own the data; apps agree on addressing
+
+The default in most software is the opposite: each app owns its
+backend, each backend owns its database, and the user's data is
+whatever they can export through an API the app vendor controls.
+
+B3nd inverts that. A rig is data wiring, not application logic. A
+user runs (or rents) a rig. Apps mount onto it under basepaths the
+user picks. The rig stores, routes, authenticates, and encrypts; it
+does not interpret. Apps commit to the addressing and trust
+conventions the user's rig accepts, and read/write through that
+surface.
+
+Two consequences:
+
+- **No moats on data.** A second app that follows the same
+  addressing convention can read what the first app wrote, without
+  integration contracts or per-app APIs. Apps stop being silos for
+  the data they generate.
+- **The user is the substrate.** Apps run against many rigs (the
+  user's, the org's, a community's). The same app code, swapping
+  basepaths and credentials, works wherever the user has space.
+
+This is why B3nd's primitives — message tuple, URI-keyed addressing,
+client-side cryptography, pluggable storage — split the way they do.
+The rig holds nothing app-specific; the interpretation lives in the
+protocol module the apps share.
 
 ## Transports are uniform
 

@@ -144,44 +144,66 @@ that the protocol's node resolves by issuing the component reads in
 parallel and returning the folded state in one call. The underlying
 URIs remain canonical; `?fn=view` is convenience.
 
-## Base-path injection — letting deployers choose the mount point
+## Mount basepaths so users keep control of their data
 
-A protocol module does not have to hard-code its scheme. It can export
-a **factory** that takes a base path at construction time:
+A protocol module does not need to hard-code where it lives. Export
+a **factory** that takes a basepath at construction time:
 
 ```
-taskwatchProtocol("task://t/")                     // standalone
-taskwatchProtocol("signed://0xabc.../taskwatch/")  // mounted inside a signed scheme
-taskwatchProtocol("immutable://acme/tasks/")       // mounted inside an org-namespaced immutable surface
+taskwatchProtocol("taskwatch://")
+taskwatchProtocol("signed://0xabc.../taskwatch/")
+taskwatchProtocol("acme/internal/tasks/")
 ```
 
-The factory builds programs keyed at `${basePath}<sub-prefix>` and URI
-helpers prepend `basePath`. The shape, validators, classifiers, and
-handlers are identical across mounts. The behavior **on top of** the
-mount is whatever the outer scheme guarantees — which is how the
-protocol inherits signing, immutability, or encryption from its host
-scheme without having to re-implement those rules.
+The shape, programs, handlers, and code vocabulary are identical
+across mounts. What changes is **where** on a user's rig the protocol
+lives.
 
-When designing this way:
+This is in service of the bigger point (see VISION.md): B3nd is built
+so users own the data and apps agree on addressing. A protocol that
+hard-codes its scheme makes the app the moat — it dictates where its
+data lives, and other apps can't see or extend it. Letting deployers
+pick the mount inverts that. The rig is data wiring the user
+controls; apps commit to the addressing convention and ride a surface
+the user already runs.
 
-- **URI helpers are the only public way to build URIs.** No caller
-  should hard-code `task://t/<id>` — if they do, the mount-point
-  abstraction leaks.
-- **Validate the base path in the factory.** It must end with `/`,
-  carry a scheme and host, and reject bases incompatible with the
-  protocol's writes (e.g. mounting a mutable index under
-  `hash://sha256/`).
-- **Multi-tenancy falls out.** The base path is a tenant key — two
-  instances of the same protocol on one rig under different bases
-  share no state.
-- **Discoverability is the cost.** `signed://0xabc.../taskwatch/` is
-  less self-describing than `task://t/` in a route table. Consider
-  exposing a manifest (`{ name, basePath, programKeys }`) so operators
-  can introspect what's mounted where.
+Practical guidance for the factory:
 
-This is independent of the behavior-named-scheme guidance above.
-Either composes without the other; together they give you protocol
-modules that are reusable across trust models and namespaces.
+- **URI helpers are the only public way to build URIs.** Hard-coded
+  locators leak the mount-point abstraction.
+- **Validate the basepath in the factory.** End it with `/`, require
+  a scheme separator, reject bases incompatible with the protocol's
+  writes.
+- **Multi-tenancy falls out.** Two mounts under different basepaths
+  are independent state on the same rig.
+- **Treat the storage root as a separate constructor argument.** The
+  URI basepath says where the protocol lives on the wire; the
+  storage root says where bytes land. Operators vary them
+  independently.
+
+The behaviour layered on top of a mount is whatever the outer scheme
+guarantees — mounting under `signed://<pubkey>/` inherits signature
+gating; under `immutable://`, write-once. The protocol gains those
+rules for free instead of re-implementing them.
+
+## status() is the protocol's manifest
+
+The rig already returns a `StatusResult` from `status()`. Hydrate
+it. A protocol mounted on a rig should report:
+
+- Its schema(s).
+- Its code vocabulary (`ok:*`, `refuse:*`).
+- A handful of URI examples (point reads, listing locators).
+- Mount metadata (basepath, store kind).
+
+This is the protocol's runtime self-description. Skills, MCP tool
+descriptions, app UIs, catalog consumers all read from one place
+instead of duplicating the protocol's shape across configs.
+
+Users browsing their own rig see what is mounted on their data.
+Apps connecting to a rig discover the addressing and trust
+conventions to follow. The status payload is the contract the rig
+publishes for everything riding on it.
 
 ## Use protocols here to push-test canon
 
@@ -258,6 +280,14 @@ A protocol is shipped as a module that exports `{ programs, handlers }`
 helpers, etc.). Apps and operators both depend on the same module: they
 construct a `Rig` with those tables and wire routes appropriate to the
 deployment.
+
+Ship the module so it runs on **both sides** of every transport. The
+same `protocol.ts` should import cleanly into a Deno server, a
+browser bundle, an MCP boot script. The program runs locally wherever
+it imports — a browser app refusing an invalid write does so with
+the same refusal code the server would emit, without a round trip.
+The module is the protocol's contract; transports just carry the
+tuples.
 
 Protocol authors do **not** ship transport or storage choices. Those
 are operator concerns.
